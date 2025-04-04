@@ -419,76 +419,130 @@ void SmartHomeBridgeModule::serveProgModePage()
 
 void SmartHomeBridgeModule::serveHomePage()
 {
-  auto name = String(getNameInUTF8());
-  name.replace("<", "&lt;");
-  name.replace(">", "&gt;");
-  name.replace("&", "&amp;");
-  name.replace("\"", "&quot;");
+    auto name = String(getNameInUTF8());
+    name.replace("<", "&lt;"); name.replace(">", "&gt;"); name.replace("&", "&amp;"); name.replace("\"", "&quot;");
 
-  String res = "<!DOCTYPE html><html lang=\"en\"><meta charset=\"UTF-8\"><meta http-equiv=\"refresh\" content=\"10;url=/\"><title>";
-  res += name;
-  res += "</title><body>";
-  res += "<h1>OpenKNX SmartHome Bridge</h1>";
-  res += "© Copyright OpenKNX, Michael Geramb, 2023-";
-  res += (__DATE__ + sizeof(__DATE__) - 5);
-  res += "<br><br>Name: ";
-  res += name;
-  res += "<br>IP Address: ";
-  res += openknxNetwork.localIP().toString();
-  res += "<br>ETS Gerätetype: 0x";
-  char etsType[5];
-  sprintf(etsType, "%02X%02X", MAIN_OpenKnxId, MAIN_ApplicationNumber);
-  res += etsType;
-  res += "<br>ETS App Version: ";
-  res += MAIN_ApplicationVersion;
-  res += "<br>KNX Address: ";
-  res += openknx.info.humanIndividualAddress().c_str();
-  res += "<br>KNX Version: ";
-  res += KNX_Version;
-  res += "<br>Version: ";
-  res += MAIN_Version;
-  res += "<br>Common Version: ";
-  res += MODULE_Common_Version;
-  res += "<br>Logikmodul Version: ";
-  res += MODULE_LogicModule_Version;
-  res += "<br>Arduino Version: ";
-  res += ESP_ARDUINO_VERSION_MAJOR;
-  res += ".";
-  res += ESP_ARDUINO_VERSION_MINOR;
-  res += ".";
-  res += ESP_ARDUINO_VERSION_PATCH;
-  res += "<br>Verwendete Kanäle: " + (String)getNumberOfUsedChannels();
-  res += " von " + (String)BRI_ChannelCount;
-  res += "<br>Freier Heap: " + (String)ESP.getFreeHeap() + " of " + (String)ESP.getHeapSize();
-  res += "<br>Minimaler freier Heap: " + (String)ESP.getMinFreeHeap();
-  res += "<br>Größter freie Heapblock: " + (String)ESP.getMaxAllocHeap();
-  if (ESP.getFreePsram() > 0)
-  {
-    res += "<br>Freier PSRAM: " + (String)ESP.getFreePsram() + " of " + (String)ESP.getPsramSize();
-    res += "<br>Minimaler freier PSRAM: " + (String)ESP.getMinFreePsram();
-  }
-  res += "<br>Maximale Stack Verwendung: " + (String)(8192 - uxTaskGetStackHighWaterMark(nullptr));
-  res += " von 8192";
-  res += "<br>Laufzeit: " + (String)millis();
-  res += "<h2>Bridges:</h2>";
-  for (auto it = bridgeInterfaces->begin(); it != bridgeInterfaces->end(); ++it)
-  {
-    (*it)->getInformation(res);
-    res += "<br>";
-  }
-  // prog button
-  res += "<h2>Control</h2><form method='post' action='/progMode'><input name='progMode' type='hidden' value='";
-  res += knx.progMode() ? "0" : "1";
-  res += "'><input type='submit' value='";
-  res += knx.progMode() ? "Stopp KNX Adressen Programmierungsmodus" : "Start KNX Adressen Programmierungsmodus";
-  res += "'></form>";
-  // reset button
-  res += "<form method='post' action='/reboot'><input type='submit' value='Gerät neustarten'></form>";
-  // firmware update button
-  // res += "<form action='/updateFW'><button type='submit'>Update Firmware</button></form>";
-  res += "</body>";
-  webServer->send(200, "text/html;charset=UTF-8", res);
-}
+    String res = R"rawliteral(
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>)rawliteral" + name + R"rawliteral(</title>
+        <style>
+            body { font-family: Arial, sans-serif; text-align: center; background: #121212; color: #fff; margin: 0; padding: 20px; }
+            h1 { color: #4CAF50; font-size: 2em; margin: 0; }
+            .logo { width: 100px; height: auto; margin-bottom: 20px; }
+            table { width: 90%; max-width: 600px; margin: 20px auto; border-collapse: collapse; background: #222; border-radius: 8px; overflow: hidden; }
+            th, td { padding: 12px; border-bottom: 1px solid #444; }
+            th { background: #333; font-weight: bold; }
+            tr:hover { background: #444; }
+            button { padding: 10px 15px; margin: 10px; border: none; cursor: pointer; border-radius: 5px; font-size: 16px; }
+            .btn-primary { background: #4CAF50; color: white; }
+            .btn-danger { background: #d9534f; color: white; }
+            .btn-warning { background: #f0ad4e; color: white; }
+            .btn:hover { opacity: 0.8; }
+            .container { max-width: 800px; margin: auto; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <!-- OpenKNX Logo -->
+            <img alt="" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSJ3aGl0ZSIvPgo8bGluZSB4MT0iNyIgeTE9IjIwIiB4Mj0iNyIgeTI9IjE1IiBzdHJva2U9IiM0NDk4NDEiIHN0cm9rZS13aWR0aD0iMiIvPgo8bGluZSB5MT0iMTYiIHgyPSIzMiIgeTI9IjE2IiBzdHJva2U9IiM0NDk4NDEiIHN0cm9rZS13aWR0aD0iMiIvPgo8cmVjdCB4PSIyIiB5PSIyMSIgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjNDQ5ODQxIi8+CjxyZWN0IHg9IjIwIiB5PSIxIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiM0NDk4NDEiLz4KPHJlY3QgeD0iMjIiIHk9IjIzIiB3aWR0aD0iNiIgaGVpZ2h0PSI2IiBzdHJva2U9ImJsYWNrIiBzdHJva2Utd2lkdGg9IjIiLz4KPHJlY3QgeD0iNCIgeT0iMyIgd2lkdGg9IjYiIGhlaWdodD0iNiIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjwvc3ZnPgo=" />
+            <h1>OpenKNX SmartHome Bridge</h1>
+            <p>© OpenKNX, Michael Geramb, 2023-)rawliteral" + (__DATE__ + sizeof(__DATE__) - 5) + R"rawliteral(</p>
+            <table>
+    )rawliteral";
+
+    auto addRow = [&](const String& key, const String& value) {
+        res += "<tr><td>" + key + "</td><td>" + value + "</td></tr>";
+    };
+
+    addRow("Name", name);
+#ifdef DEVICE_NAME
+    addRow("Gerätename", String(DEVICE_NAME));
 #endif
+#ifdef DEVICE_ID
+    addRow("Geräte ID", String(DEVICE_ID));
+#endif
+    addRow("IP", openknxNetwork.localIP().toString());
+    addRow("Subnetz", openknxNetwork.subnetMask().toString());
+    addRow("Gateway", openknxNetwork.gatewayIP().toString());
+    addRow("WiFi SSID", WiFi.SSID());
+    addRow("WiFi Signal", String(WiFi.RSSI()) + " dBm");
+    addRow("DNS", openknxNetwork.nameServerIP().toString());
+
+    char etsType[5];
+    sprintf(etsType, "%02X%02X", MAIN_OpenKnxId, MAIN_ApplicationNumber);
+    addRow("ETS Gerätetype", "0x" + String(etsType));
+    addRow("ETS App Version", String(MAIN_ApplicationVersion));
+    addRow("KNX Address", openknx.info.humanIndividualAddress().c_str());
+    addRow("KNX Serial", openknx.info.humanSerialNumber().c_str());
+    addRow("KNX Version", String(KNX_Version));
+    addRow("Firmware", String(MAIN_Version));
+    addRow("Common Version", String(MODULE_Common_Version));
+    addRow("LogicModul Version", String(MODULE_LogicModule_Version));
+    addRow("Arduino Version", String(ESP_ARDUINO_VERSION_MAJOR) + "." +
+                              String(ESP_ARDUINO_VERSION_MINOR) + "." +
+                              String(ESP_ARDUINO_VERSION_PATCH));
+    addRow("IDF Version", String(ESP_IDF_VERSION_MAJOR) + "." +
+                          String(ESP_IDF_VERSION_MINOR) + "." +
+                          String(ESP_IDF_VERSION_PATCH));
+
+    addRow("Chip Revision", String(ESP.getChipRevision()));
+    addRow("SDK Version", String(ESP.getSdkVersion()));
+    addRow("CPU Frequenz", String(ESP.getCpuFreqMHz()) + " MHz");
+    addRow("CPU Temperatur", String(temperatureRead()) + " °C");
+    addRow("CPU Kerne", String(ESP.getChipCores()));
+    addRow("Flash", String(ESP.getFlashChipSize() / 1024) + " KB");
+    if(ESP.getFreePsram() > 0)
+    {
+      addRow("PSRAM frei", String(ESP.getFreePsram() / 1024) + " von " + String(ESP.getPsramSize() / 1024) + " KB");
+      addRow("PSRAM Min. frei", String(ESP.getMinFreePsram()) + " Bytes");
+    }
+    addRow("Heap", String(ESP.getFreeHeap()) + " von " + String(ESP.getHeapSize()) + " Bytes");
+    addRow("Heap freier Heapblock", String(ESP.getMaxAllocHeap()) + " Bytes");
+    addRow("Heap minimaler freier Heap", String(ESP.getMinFreeHeap()) + " Bytes");
+    addRow("Stack Nutzung", String(8192 - uxTaskGetStackHighWaterMark(nullptr)) + " von 8192 Bytes");
+    addRow("Verwendete Kanäle", String(getNumberOfUsedChannels()) + " von " + String(BRI_ChannelCount));
+    addRow("Laufzeit", String(millis() / 3600000) + ":" +
+                       String((millis() / 60000) % 60) + ":" +
+                       String((millis() / 1000) % 60) + " (h:m:s)");
+
+    // 0 = normal, 1 = power on, 2 = external, 3 = software, 4 = hardware, 5 = watchdog, 6 = exception
+    addRow("Reset Grund", String(esp_reset_reason() == 1 ? "Power On" : esp_reset_reason() == 2 ? "External" : esp_reset_reason() == 3 ? "Software" : esp_reset_reason() == 4 ? "Hardware" : esp_reset_reason() == 5 ? "Watchdog" : esp_reset_reason() == 6 ? "Exception" : "Normal"));
+    
+
+    res += "</table>";
+    
+    res += "<h2>Bridges:</h2>"; // HomeKit, Hue, etc.
+    for (auto it = bridgeInterfaces->begin(); it != bridgeInterfaces->end(); ++it)
+    {
+      (*it)->getInformation(res);
+      res += "<br>";
+    }
+
+    res += "<h2>Steuerung</h2>";
+    res += R"rawliteral(
+            <form method='post' action='/progMode'>
+                <button class='btn-warning' name='progMode' value=')rawliteral" + 
+                String(knx.progMode() ? "0" : "1") + R"rawliteral('>)rawliteral" +
+                String(knx.progMode() ? "Stopp KNX Programmierung" : "Start KNX Programmierung") + 
+                R"rawliteral(</button>
+            </form>
+            <form method='post' action='/reboot'>
+                <button class='btn-danger'>Gerät neustarten</button>
+            </form>
+            <form method='get' action='/updateFW'>
+                <button class='btn-primary'>Firmware Update</button>
+            </form>
+        </div>
+    </body>
+    </html>
+    )rawliteral";
+
+    webServer->send(200, "text/html;charset=UTF-8", res);
+}
+#endif // SMARTHOMEBRIDGE_DEVICESONLY
 
 SmartHomeBridgeModule openknxSmartHomeBridgeModule;

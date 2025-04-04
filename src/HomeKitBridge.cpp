@@ -187,8 +187,10 @@ void HomeKitBridge::getInformation(String &result)
             result += "Maximale Stack Verwendung: ";
             result += HOMESPAN_STACK_SIZE - minFreeStack;
             result += " von " + (String)HOMESPAN_STACK_SIZE;
+
             // HomeKit Factory Reset
-            result += "<form method='post' action='/resetPairing'><input name='resetPairing' type='hidden' value='1'><input type='submit' value='Alle HomeKit Kopplungen Löschen'></form>";
+            //result += "<form method='post' action='/resetPairing'><input name='resetPairing' type='hidden' value='1'><input type='submit' value='Alle HomeKit Kopplungen Löschen'></form>";
+            result += "<form method='post' action='/resetPairing'> <button class='btn-danger' type='submit'>Alle HomeKit Kopplungen Löschen</button></form>";
         }
     }
 }

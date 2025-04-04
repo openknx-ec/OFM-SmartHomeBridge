@@ -2,6 +2,6 @@
   "name": "OFM-SmartHomeBridge",
   "version": "0.1.0",
   "dependencies": {
-
+    "homespan/HomeSpan": "2.1.1"
   }
 }
